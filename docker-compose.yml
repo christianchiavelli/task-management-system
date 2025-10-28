@@ -1,0 +1,112 @@
+# 🐳 Docker Compose - Ambiente de Desenvolvimento
+# Orquestra todos os serviços: Backend, Frontend e PostgreSQL
+
+version: '3.8'
+
+services:
+  # =====================================
+  # PostgreSQL Database
+  # =====================================
+  postgres:
+    image: postgres:18-alpine
+    container_name: task-manager-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: task_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - task-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d task_management"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================================
+  # Backend API (NestJS)
+  # =====================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: task-manager-api
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      # Database
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: task_management
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: admin123
+      
+      # JWT
+      JWT_SECRET: super-secret-jwt-key-for-production-change-this
+      JWT_EXPIRES_IN: 7d
+      
+      # App
+      NODE_ENV: development
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - task-network
+    volumes:
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "http.get('http://localhost:3001/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =====================================
+  # Frontend (Next.js)
+  # =====================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: task-manager-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - task-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# =====================================
+# Networks
+# =====================================
+networks:
+  task-network:
+    driver: bridge
+    name: task-manager-network
+
+# =====================================
+# Volumes
+# =====================================
+volumes:
+  postgres_data:
+    driver: local
+    name: task-manager-postgres-data

@@ -1,0 +1,82 @@
+# Task Management System - Monorepo GitIgnore
+
+# ===================================
+# Global Environment Files
+# ===================================
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# ===================================
+# Global Build Artifacts
+# ===================================
+# Let individual projects handle their specific builds
+# but catch any global artifacts
+*.tsbuildinfo
+
+# ===================================
+# Global Dependencies  
+# ===================================
+# Main node_modules (if any at root level)
+/node_modules/
+
+# ===================================
+# Global Logs
+# ===================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===================================
+# IDE & Editor Files
+# ===================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# ===================================
+# OS Generated Files
+# ===================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===================================
+# Docker & Deployment
+# ===================================
+.dockerignore
+
+# ===================================
+# Temporary & Cache Files
+# ===================================
+*.tmp
+*.temp
+.cache/
+
+# ===================================
+# Git & Version Control
+# ===================================
+*.orig
+*.rej
+
+# ===================================
+# Archive & Compression
+# ===================================
+*.zip
+*.tar.gz
+*.tgz
+*.rar
